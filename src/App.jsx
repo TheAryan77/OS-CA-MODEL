@@ -4,14 +4,14 @@ import DeadlockPreventionButton from './components/DeadlockPreventionButton ';
 const DeadlockDetectionSimulator = () => {
   // State for processes, resources, and allocation
   const [setupMode, setSetupMode] = useState(true);
-const [processCount, setProcessCount] = useState(4);
-const [resourceCount, setResourceCount] = useState(4);
-const [resourceInstances, setResourceInstances] = useState([1, 1, 1, 2]);
-const processColors = ['bg-blue-500', 'bg-green-500', 'bg-yellow-500', 'bg-purple-500', 'bg-pink-500', 'bg-indigo-500', 'bg-orange-500', 'bg-teal-500'];
-const resourceColors = ['bg-red-500', 'bg-orange-500', 'bg-pink-500', 'bg-indigo-500', 'bg-green-700', 'bg-gray-700', 'bg-blue-700', 'bg-yellow-700'];
+  const [processCount, setProcessCount] = useState(4);
+  const [resourceCount, setResourceCount] = useState(4);
+  const [resourceInstances, setResourceInstances] = useState([1, 1, 1, 2]);
+  const processColors = ['bg-blue-500', 'bg-green-500', 'bg-yellow-500', 'bg-purple-500', 'bg-pink-500', 'bg-indigo-500', 'bg-orange-500', 'bg-teal-500'];
+  const resourceColors = ['bg-red-500', 'bg-orange-500', 'bg-pink-500', 'bg-indigo-500', 'bg-green-700', 'bg-gray-700', 'bg-blue-700', 'bg-yellow-700'];
 
-const [processes, setProcesses] = useState([]);
-const [resources, setResources] = useState([]);
+  const [processes, setProcesses] = useState([]);
+  const [resources, setResources] = useState([]);
   
   const [simulationSpeed, setSimulationSpeed] = useState(1000);
   const [isRunning, setIsRunning] = useState(false);
@@ -167,6 +167,7 @@ const [resources, setResources] = useState([]);
   };
   
   // Simulate a step in resource allocation
+<<<<<<< HEAD
 const simulateStep = () => {
   if (deadlockDetected) {
     preventDeadlock();
@@ -268,6 +269,97 @@ const simulateStep = () => {
     addAiLog('✅ Simulation finished: No deadlock and all processes completed or aborted.');
   }
 };
+=======
+  const simulateStep = () => {
+    if (deadlockDetected) {
+      preventDeadlock();
+      return;
+    }
+    
+    const processesCopy = [...processes];
+    const resourcesCopy = [...resources];
+    
+    // Phase 1: Processes that need resources try to acquire them
+    processes.forEach((process, idx) => {
+      if (process.status !== 'running') return;
+      
+      if (process.needsResource) {
+        const resourceIdx = resourcesCopy.findIndex(r => r.id === process.needsResource);
+        if (resourceIdx >= 0) {
+          const resource = resourcesCopy[resourceIdx];
+          
+          // Check if resource is available
+          if (resource.allocatedTo.length < resource.instances) {
+            // Acquire resource
+            processesCopy[idx] = {
+              ...process,
+              resources: [...process.resources, resource.id],
+              needsResource: null
+            };
+            
+            resourcesCopy[resourceIdx] = {
+              ...resource,
+              allocatedTo: [...resource.allocatedTo, process.id]
+            };
+            
+            addAiLog(`✅ Process ${process.id} acquired ${resource.id}`);
+          }
+        }
+      }
+    });
+    
+    // Phase 2: Processes might release resources or request new ones
+    processesCopy.forEach((process, idx) => {
+      if (process.status !== 'running') return;
+      
+      // Random chance to release resources
+      if (process.resources.length > 0 && Math.random() < 0.2) {
+        const releasedResource = process.resources[Math.floor(Math.random() * process.resources.length)];
+        processesCopy[idx] = {
+          ...process,
+          resources: process.resources.filter(r => r !== releasedResource)
+        };
+        
+        const resourceIdx = resourcesCopy.findIndex(r => r.id === releasedResource);
+        resourcesCopy[resourceIdx] = {
+          ...resourcesCopy[resourceIdx],
+          allocatedTo: resourcesCopy[resourceIdx].allocatedTo.filter(p => p !== process.id)
+        };
+        
+        addAiLog(`📤 Process ${process.id} released ${releasedResource}`);
+      }
+      
+      // Random chance to request a new resource if not already waiting
+      if (process.needsResource === null && Math.random() < 0.3) {
+        // Find a resource not already held
+        const availableResources = resourcesCopy
+          .filter(r => !process.resources.includes(r.id))
+          .map(r => r.id);
+        
+        if (availableResources.length > 0) {
+          const requestedResource = availableResources[Math.floor(Math.random() * availableResources.length)];
+          processesCopy[idx] = {
+            ...process,
+            needsResource: requestedResource
+          };
+          
+          addAiLog(`📥 Process ${process.id} requested ${requestedResource}`);
+        }
+      }
+    });
+    
+    setProcesses(processesCopy);
+    setResources(resourcesCopy);
+    
+    // Run deadlock detection
+    const hasDeadlock = detectDeadlock();
+    
+    // If no deadlock, run prediction (if enabled)
+    if (!hasDeadlock) {
+      predictDeadlock();
+    }
+  };
+>>>>>>> a2ba4b9e3eb00ad8e9a7f8c15d4b9aea4f88b54f
   
   // Add a log entry
   const addAiLog = (message) => {
@@ -278,6 +370,7 @@ const simulateStep = () => {
   };
   
   // Reset simulation
+<<<<<<< HEAD
 const resetSimulation = () => {
   setIsRunning(false);
   setDeadlockDetected(false);
@@ -303,6 +396,27 @@ const resetSimulation = () => {
   );
   addAiLog("🔄 Simulation reset");
 };
+=======
+  const resetSimulation = () => {
+    setIsRunning(false);
+    setDeadlockDetected(false);
+    setWaitForGraph([]);
+    setAiLogs([]);
+    setProcesses([
+      { id: 'P1', color: 'bg-blue-500', resources: [], needsResource: null, status: 'running' },
+      { id: 'P2', color: 'bg-green-500', resources: [], needsResource: null, status: 'running' },
+      { id: 'P3', color: 'bg-yellow-500', resources: [], needsResource: null, status: 'running' },
+      { id: 'P4', color: 'bg-purple-500', resources: [], needsResource: null, status: 'running' }
+    ]);
+    setResources([
+      { id: 'R1', instances: 1, allocatedTo: [], color: 'bg-red-500' },
+      { id: 'R2', instances: 1, allocatedTo: [], color: 'bg-orange-500' },
+      { id: 'R3', instances: 1, allocatedTo: [], color: 'bg-pink-500' },
+      { id: 'R4', instances: 2, allocatedTo: [], color: 'bg-indigo-500' }
+    ]);
+    addAiLog("🔄 Simulation reset");
+  };
+>>>>>>> a2ba4b9e3eb00ad8e9a7f8c15d4b9aea4f88b54f
   
   // Run simulation on interval
   useEffect(() => {
@@ -313,6 +427,7 @@ const resetSimulation = () => {
     return () => clearInterval(interval);
   }, [isRunning, processes, resources, simulationSpeed, deadlockDetected]);
   
+<<<<<<< HEAD
   if (setupMode) {
   // Setup form for user input
   return (
@@ -421,6 +536,17 @@ return (
       </div>
       
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 p-4">
+=======
+  return (
+    <div className="min-h-screen bg-gray-100 p-4 font-sans">
+      <div className="max-w-6xl mx-auto bg-white rounded-lg shadow-lg overflow-hidden">
+        <div className="p-4 bg-gradient-to-r from-blue-600 to-purple-600 text-white">
+          <h1 className="text-2xl font-bold">AI-Based Deadlock Detection Simulator</h1>
+          <p className="text-sm">Visualizing how AI can predict and prevent deadlocks in multi-threaded applications</p>
+        </div>
+        
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 p-4">
+>>>>>>> a2ba4b9e3eb00ad8e9a7f8c15d4b9aea4f88b54f
           {/* Left panel - Controls */}
           <div className="col-span-1 bg-gray-50 p-4 rounded-lg shadow">
             <h2 className="text-lg font-semibold mb-4">Simulation Controls</h2>
